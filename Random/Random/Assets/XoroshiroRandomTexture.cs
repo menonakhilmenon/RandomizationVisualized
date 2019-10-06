@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using System.Threading;
 using UnityEngine;
+using Int = System.UInt64;
 using UnityEngine.UI;
+using System.Threading;
 using Random = Xoroshiro;
 
-public class GenerateRandomTexture : MonoBehaviour
+public class XoroshiroRandomTexture : MonoBehaviour
 {
     public Image image;
     public Texture2D texture;
@@ -36,13 +37,18 @@ public class GenerateRandomTexture : MonoBehaviour
     float2x2 f4;
     float2 f4_;
 
-    Thread th;
+    private void Awake()
+    {
+        Random.Initialize();
+        Screen.fullScreen = false;
+    }
     void Start()
     {
         InitializeArray();
         ApplyColor();
     }
 
+    Thread th;
     void InitializeArray()
     {
         texture = new Texture2D(xWidth, yWidth);
@@ -51,7 +57,7 @@ public class GenerateRandomTexture : MonoBehaviour
         p3 = new float2(yWidth - 1, xWidth / 2f);
         colors = new Color[xWidth * yWidth];
         Color transparent = new Color(0, 0, 0, 0);
-        currentLocation = new float2(0f,0f);
+        currentLocation = new float2(0f, 0f);
         for (int i = 0; i < xWidth * yWidth; i++)
         {
             colors[i] = transparent;
@@ -66,6 +72,7 @@ public class GenerateRandomTexture : MonoBehaviour
         f3_ = new float2(0f, 1.6f);
         f4_ = new float2(0f, 0.44f);
     }
+
     public void AddIterations()
     {
         ApplySierpenskiIterations();
@@ -94,13 +101,13 @@ public class GenerateRandomTexture : MonoBehaviour
     void ApplyBarnsley()
     {
         float2 nextLocation;
-        float2 scale= new float2(xWidth/6f,yWidth/10.1f);
+        float2 scale = new float2(xWidth / 6f, yWidth / 10.1f);
         float2 offSet = new float2(xWidth / 2f, 0f);
         int2 paintCoord;
         nextLocation = currentLocation;
         for (int i = 0; i < iterations; i++)
         {
-            int rand = Random.Range_(0, 100);
+            Int rand = Random.Range(0, 100);
             if (rand < 1)
             {
                 nextLocation.x = 0f;
@@ -109,9 +116,9 @@ public class GenerateRandomTexture : MonoBehaviour
             else if (rand < 86)
             {
                 nextLocation.x = 0.85f * currentLocation.x + 0.04f * currentLocation.y;
-                nextLocation.y = -0.04f * currentLocation.x + 0.85f * currentLocation.y+1.6f;
+                nextLocation.y = -0.04f * currentLocation.x + 0.85f * currentLocation.y + 1.6f;
             }
-            else if(rand < 93)
+            else if (rand < 93)
             {
                 nextLocation.x = 0.2f * currentLocation.x + -0.26f * currentLocation.y;
                 nextLocation.y = 0.23f * currentLocation.x + 0.22f * currentLocation.y + 1.6f;
@@ -126,21 +133,12 @@ public class GenerateRandomTexture : MonoBehaviour
             paintCoord.y = (int)((nextLocation.y * scale.y) + offSet.y);
             currentLocation = nextLocation;
 
-            if (paintCoord.x >= xWidth || paintCoord.y >= yWidth || paintCoord.x<0 || paintCoord.y <0)
+            if (paintCoord.x >= xWidth || paintCoord.y >= yWidth || paintCoord.x < 0 || paintCoord.y < 0)
                 continue;
             colors[paintCoord.y * xWidth + paintCoord.x] = Color.green;
 
-   
+
         }
-    }
-    public void Clear()
-    {
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = Color.black;
-        }
-        texture.SetPixels(colors);
-        texture.Apply();
     }
     void ApplySierpenskiIterations()
     {
@@ -149,7 +147,7 @@ public class GenerateRandomTexture : MonoBehaviour
 
         for (int i = 0; i < iterations; i++)
         {
-            int rand = Random.Range_(0, 3);
+            Int rand = Random.Range(0, 3);
             if (rand == 0)
                 nT = p1;
             else if (rand == 1)
@@ -161,15 +159,24 @@ public class GenerateRandomTexture : MonoBehaviour
             currentLocation = nextLocation;
         }
     }
+    public void Clear()
+    {
+        for (int i = 0; i < colors.Length; i++)
+        {
+            colors[i] = Color.black;
+        }
+        texture.SetPixels(colors);
+        texture.Apply();
+    }
     void ApplyColor()
     {
         texture.SetPixels(colors);
         texture.Apply();
-        image.material.mainTexture=texture;
+        image.material.mainTexture = texture;
     }
 
-    float2 MMultiply(float2x2 m,float2 v)
+    float2 MMultiply(float2x2 m, float2 v)
     {
-        return new float2(m.c0.x*v.x + m.c1.x * v.y , m.c0.y * v.x + m.c1.y * v.y);
+        return new float2(m.c0.x * v.x + m.c1.x * v.y, m.c0.y * v.x + m.c1.y * v.y);
     }
 }
